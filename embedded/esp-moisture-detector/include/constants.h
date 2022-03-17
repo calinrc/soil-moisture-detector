@@ -25,9 +25,4 @@ const char* const DOC_FORM = "<h1>Wi-Fi conf</h1><form action='/' method='POST'>
 const char* const AP_ssid = "ESP8266_fallback_AP";
 const char* const AP_password = "SuperSecretPassword";
 
-
-const char* const STATE_OK_RESP = "{\"state\": \"ok\"}";
-const char* const STATE_CHANGED_DOOR_RESP = "{ \"door\" : { \"status\": \"changed\" } } ";;
-const char* const STATE_CHANGED_GATE_RESP = "{ \"gate\" : { \"status\": \"changed\" } } ";
-
 #endif //__CONSTANTS_H_
