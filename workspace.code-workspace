@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "embedded/esp-moisture-detector"
+		},
+		{
+			"path": "embedded/arduino-moisture-detector"
+		},
+		{
+			"path": "service/events_tracer"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"array": "cpp",
+			"compare": "cpp",
+			"functional": "cpp",
+			"ostream": "cpp",
+			"ranges": "cpp",
+			"tuple": "cpp",
+			"type_traits": "cpp",
+			"utility": "cpp"
+		}
+	}
+}
