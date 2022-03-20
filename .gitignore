@@ -37,3 +37,7 @@
 **/.vscode/launch.json
 **/.vscode/ipch
 **/target
+
+# avoid password publishing on platformio.ini in case OTA update is configured with passwd auth
+embedded/esp-moisture-detector/platformio.ini
+

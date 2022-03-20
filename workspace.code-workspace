@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "service/events_tracer"
+		},
+		{
+			"path": "."
 		}
 	],
 	"settings": {
