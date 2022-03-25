@@ -1,11 +1,16 @@
 use std::{env, fs::OpenOptions, io::prelude::*, process, thread, time::Duration};
 extern crate paho_mqtt as mqtt;
+extern crate serde;
 
 mod model;
+mod errors;
+
+use std::error::Error;
+use errors::EventsTracerError;
 
 // use mqtt::message::Message;
 
-const DFLT_BROKER: &str = "tcp://localhost:1883";
+const DFLT_BROKER: &str = "tcp://192.168.1.228:1883";
 const DFLT_CLIENT: &str = "rust_subscribe";
 const DFLT_TOPICS: &[&str] = &["home/sensors/moisture", "rust/test"];
 // The qos list that match topics above.
@@ -33,7 +38,7 @@ fn subscribe_topics(cli: &mqtt::Client) {
     }
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<(),Box< dyn Error>> { //std::io::Result<()> {
     let host = env::args()
         .nth(1)
         .unwrap_or_else(|| DFLT_BROKER.to_string());
@@ -83,9 +88,10 @@ fn main() -> std::io::Result<()> {
     for msg in rx.iter() {
         if let Some(msg) = msg {
             println!("Message {}", msg);
-            let si = model::SensorInfo::from_message(msg.topic(), msg.payload());
-            file.write_all(si.as_json_str().as_bytes())?;
-            file.write_all(b"\n")?;
+            let si = model::SensorInfo::from_message(msg.topic(), msg.payload()).map_err(|_| EventsTracerError::IOError)?;
+            let json_bytes = serde_json::to_vec(&si).map_err(|_| EventsTracerError::DeserializationError)?;
+            file.write_all(&json_bytes).map_err(|_| EventsTracerError::IOError)?;
+            file.write_all(b"\n").map_err(|_| EventsTracerError::IOError)?;
             //file.write_all(b"Hello, world!\n")?;
         } else if !cli.is_connected() {
             if try_reconnect(&cli) {
