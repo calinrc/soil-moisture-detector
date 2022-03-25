@@ -5,19 +5,16 @@
 #include "definitions.h"
 #include "constants.h"
 #include "config_utils.h"
-
-IPAddress AP_IP = IPAddress(10, 1, 1, 1);
-IPAddress AP_subnet = IPAddress(255, 255, 255, 0);
+#include "utils_misc.h"
 
 WifiConf wifiConf;
 bool cold_start = false;
 
 ESP8266WebServer server(1880);
+const byte sensorPin = A0;
+const byte buzzer = 9;
+volatile int count = 0; // counter
 
-bool connectToWiFi();
-void setUpAccessPoint();
-void setUpWebServer(bool coldStart);
-void setUpOverTheAirProgramming(bool coldStart);
 void handleColdStateWebServerRequest();
 
 void setup()
@@ -32,105 +29,24 @@ void setup()
 
   Serial.printf("Try connect to configured accesspoint \"%s\" \n", wifiConf.wifi_ssid);
   Serial.printf("MQTT username \"%s\" \n", wifiConf.mqtt_username);
+  Serial.printf("MQTT broker \"%s\" \n", wifiConf.mqtt_broker);
 
-  if (!connectToWiFi())
+  if (!connectToWiFi(&wifiConf))
   {
     cold_start = true;
     setUpAccessPoint();
   }
-  setUpWebServer(cold_start);
-  setUpOverTheAirProgramming(cold_start);
+  HandlerFunction handler = handleColdStateWebServerRequest;
+  setUpWebServer(cold_start, &server, &wifiConf, handler);
+  setUpOverTheAirProgramming(cold_start, &wifiConf);
   digitalWrite(LED_BUILTIN, HIGH);
   Serial.printf("Cold start %d \n", cold_start);
   Serial.println("Setup completed ...");
 }
 
-bool connectToWiFi()
-{
-  Serial.printf("Connecting to '%s'\n", wifiConf.wifi_ssid);
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(wifiConf.wifi_ssid, wifiConf.wifi_password);
-  if (WiFi.waitForConnectResult() == WL_CONNECTED)
-  {
-    Serial.print("Connected. IP: ");
-    Serial.println(WiFi.localIP());
-    return true;
-  }
-  else
-  {
-    Serial.println("Connection Failed!");
-    return false;
-  }
-}
-
-void setUpAccessPoint()
-{
-  Serial.println("Setting up access point.");
-  Serial.printf("SSID: %s\n", AP_ssid);
-  Serial.printf("Password: %s\n", AP_password);
-
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.softAPConfig(AP_IP, AP_IP, AP_subnet);
-  if (WiFi.softAP(AP_ssid, AP_password))
-  {
-    Serial.print("Ready. Access point IP: ");
-    Serial.println(WiFi.softAPIP());
-  }
-  else
-  {
-    Serial.println("Setting up access point failed!");
-  }
-}
-
-void setUpWebServer(bool coldStart)
-{
-  if (coldStart)
-  {
-    server.on("/", handleColdStateWebServerRequest);
-    server.begin();
-  }
-}
-
 void handleColdStateWebServerRequest()
 {
-  bool save = false;
-
-  if (server.hasArg("ssid") && server.hasArg("password") && server.hasArg("mqtt_user") && server.hasArg("mqtt_password"))
-  {
-    server.arg("ssid").toCharArray(wifiConf.wifi_ssid, sizeof(wifiConf.wifi_ssid));
-    server.arg("password").toCharArray(wifiConf.wifi_password, sizeof(wifiConf.wifi_password));
-    server.arg("mqtt_user").toCharArray(wifiConf.mqtt_username, sizeof(wifiConf.mqtt_username));
-    server.arg("mqtt_password").toCharArray(wifiConf.mqtt_password, sizeof(wifiConf.mqtt_password));
-    server.arg("ota_password").toCharArray(wifiConf.ota_password, sizeof(wifiConf.ota_password));
-
-    Serial.println(server.arg("ssid"));
-    Serial.println(wifiConf.wifi_ssid);
-
-    Serial.println(server.arg("mqtt_user"));
-    Serial.println(wifiConf.mqtt_username);
-
-    writeWifiConf(&wifiConf);
-    save = true;
-  }
-
-  String message = "";
-  message += DOC_HEADER;
-  if (save)
-    message += DOC_REBOOTING;
-  else
-  {
-    String form = String(DOC_FORM);
-    form.replace("$SSID", wifiConf.wifi_ssid);
-    form.replace("$PASSWORD", wifiConf.wifi_password);
-    form.replace("$MQTTUSER", wifiConf.mqtt_username);
-    form.replace("$MQTTPASSORD", wifiConf.mqtt_password);
-    form.replace("$OTAPASSORD", wifiConf.ota_password);
-    message += form;
-  }
-
-  message += DOC_FOOTER;
-  server.send(200, "text/html", message);
+  bool save = serverHandleRequest(&server, &wifiConf);
 
   if (save)
   {
@@ -140,34 +56,18 @@ void handleColdStateWebServerRequest()
   }
 }
 
-void setUpOverTheAirProgramming(bool coldStart)
-{
-
-  // Change OTA port.
-  // Default: 8266
-  // ArduinoOTA.setPort(8266);
-
-  // Change the name of how it is going to
-  // show up in Arduino IDE.
-  // Default: esp8266-[ChipID]
-  // ArduinoOTA.setHostname("myesp8266");
-
-  // Re-programming passowrd.
-  // No password by default.
-  if (!cold_start)
-  {
-    ArduinoOTA.setPassword(wifiConf.ota_password);
-  }
-
-  ArduinoOTA.begin();
-}
-
 void loop()
 {
   // Give processing time for ArduinoOTA.
   // This must be called regularly
   // for the Over-The-Air upload to work.
   ArduinoOTA.handle();
+
+  if (count % HOUR_CYCLE == 0)
+  {
+    readMoistureSensor(sensorPin, buzzer, count);
+  }
+  count++;
 
   // Give processing time for the webserver.
   // This must be called regularly

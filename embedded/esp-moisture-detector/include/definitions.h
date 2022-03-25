@@ -7,6 +7,7 @@ struct WifiConf
 {
   char wifi_ssid[50];
   char wifi_password[50];
+  char mqtt_broker[50];
   char mqtt_username[50];
   char mqtt_password[50];
   char ota_password[50];

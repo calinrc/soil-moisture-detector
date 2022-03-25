@@ -10,6 +10,8 @@ const char* const DOC_FORM = "<h1>Wi-Fi conf</h1><form action='/' method='POST'>
 <div><input type='text' name='ssid' value='$SSID'/></div> \
 <div>Password:</div> \
 <div><input type='password' name='password' value='$PASSWORD'/></div> \
+<div>MQTT broker:</div> \
+<div><input type='text' name='mqtt_broker' value='$MQTTBROKER'/></div> \
 <div>MQTT user:</div> \
 <div><input type='text' name='mqtt_user' value='$MQTTUSER'/></div> \
 <div>MQTT password:</div> \
