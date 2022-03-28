@@ -24,3 +24,24 @@ impl SensorInfo {
 
     }
 }
+
+
+
+use clap::Parser;
+
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+pub struct Args {
+    /// Mqtt broker host
+    #[clap(short, long)]
+    mqtt_broker: String,
+
+    /// Output json line file path
+    #[clap(short, long)]
+    output_json_path: String,
+    
+    // /// Number of times to greet
+    // #[clap(short, long, default_value_t = 1)]
+    // count: u8,
+}

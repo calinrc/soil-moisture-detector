@@ -1,6 +1,7 @@
 use std::{env, fs::OpenOptions, io::prelude::*, process, thread, time::Duration};
 extern crate paho_mqtt as mqtt;
 extern crate serde;
+use clap::Parser;
 
 mod model;
 mod errors;
@@ -10,7 +11,7 @@ use errors::EventsTracerError;
 
 // use mqtt::message::Message;
 
-const DFLT_BROKER: &str = "tcp://192.168.1.228:1883";
+const DFLT_BROKER: &str = "tcp://localhost:1883";
 const DFLT_CLIENT: &str = "rust_subscribe";
 const DFLT_TOPICS: &[&str] = &["home/sensors/moisture", "rust/test"];
 // The qos list that match topics above.
@@ -39,6 +40,10 @@ fn subscribe_topics(cli: &mqtt::Client) {
 }
 
 fn main() -> Result<(),Box< dyn Error>> { //std::io::Result<()> {
+
+    let args = model::Args::parse();
+
+
     let host = env::args()
         .nth(1)
         .unwrap_or_else(|| DFLT_BROKER.to_string());
