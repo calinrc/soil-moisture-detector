@@ -109,7 +109,7 @@ bool serverHandleRequest(ESP8266WebServer *server, WifiConf *wifiConf)
     Serial.println(server->arg("mqtt_user"));
     Serial.println(wifiConf->mqtt_username);
 
-    writeWifiConf(&wifiConf);
+    writeWifiConf(wifiConf);
     save = true;
   }
 
@@ -140,18 +140,18 @@ void blinkNumber(int a)
   int secondDigit = (a / 10);
   for (int i = 0; i <= secondDigit; i++)
   {
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(150);
     digitalWrite(LED_BUILTIN, LOW);
+    delay(150);
+    digitalWrite(LED_BUILTIN, HIGH);
     delay(150);
   }
   delay(1000);
 
   for (int i = 0; i <= firstDigit; i++)
   {
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(150);
     digitalWrite(LED_BUILTIN, LOW);
+    delay(150);
+    digitalWrite(LED_BUILTIN, HIGH);
     delay(150);
   }
 }
@@ -163,14 +163,14 @@ const unsigned long HOUR_CYCLE = HOUR_SEC / CYCLE_SEC - 1; // one cycle is used 
 const unsigned long DAY_CYCLE  = (DAY_SEC / CYCLE_SEC) - 24; // onece a day tone the the piezo speaker
 
 
-void readMoistureSensor(int sensorPin, int buzzer , int count)
+int readMoistureSensor(int vccPin, int buzzer , int count)
 {
   // Serial.println("Reading soil moisture");
 
-  digitalWrite(sensorPin, HIGH);
+  digitalWrite(vccPin, HIGH);
   delay(8 * 1000);
   int analog_value = analogRead(A0);
-  digitalWrite(sensorPin, LOW);
+  digitalWrite(vccPin, LOW);
   int moisture = map(analog_value, 0, 1023, 0, 100);
   moisture = 100 - moisture;
   Serial.print("Moisture in soil = ");
@@ -179,14 +179,15 @@ void readMoistureSensor(int sensorPin, int buzzer , int count)
   Serial.println(count);
   Serial.flush();
 
-  if (moisture < 50 && count % DAY_CYCLE == 0 )
-  {
-    tone(buzzer, 1000); // Send 1KHz sound signal...
-    delay(1000);        // ...for 1 sec
-    noTone(buzzer);     // Stop sound...
-  }
+  // if (moisture < 50 && count % HOUR_CYCLE == 0 )
+  // {
+  //   tone(buzzer, 1000); // Send 1KHz sound signal...
+  //   delay(1000);        // ...for 1 sec
+  //   noTone(buzzer);     // Stop sound...
+  // }
 
   blinkNumber(moisture);
+  return moisture;
 }
 
 #endif //__UTILS_MISC_H_

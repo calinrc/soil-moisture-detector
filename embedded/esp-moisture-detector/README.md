@@ -32,3 +32,7 @@ ESP-12S 3.3 V
 |GND      | Battery -, FC-28 GND            | Ground                  |
 |A0       | FC-28                           | Soil Sensor analog pin  |
 |TBD      | FC-28                           | Soil Sensor VCC Pin     |
+
+
+## References
+- https://randomnerdtutorials.com/esp8266-adc-reading-analog-values-with-nodemcu/
